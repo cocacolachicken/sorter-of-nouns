@@ -1,5 +1,11 @@
-from pydantic import BaseModel
+import os
 
+from pydantic import BaseModel
+from partition import Partition
+from openai import OpenAI
+import queryer
+
+cursor = None;
 
 class CategorizedNoun(BaseModel):
     category: str
@@ -16,7 +22,7 @@ def partition_to_string(partition):
         return ""
 
 
-def sort_into_partition(client, partition, obj, reasoning="no") -> CategorizedNoun:
+def sort_into_partition(client, partition: list[str], obj, reasoning="no") -> CategorizedNoun:
     """ Calls openAI to sort obj into categories specified by partition
 
     :param client: An openAI client
@@ -41,10 +47,37 @@ def sort_into_partition(client, partition, obj, reasoning="no") -> CategorizedNo
     return response.output_parsed
 
 
-if __name__ == "__main__":
-    from openai import OpenAI
 
-    print(partition_to_string(["Fire", "Water", "Earth", "Wood", "Metal"]))
-    print(["Fire", "Water", "Earth", "Wood", "Metal"])
+class ReturnObj:
+    m: str
+
+    def __init__(self):
+        return
+
+
+def decide_on_cat(obj: str, partition: Partition, cache) -> ReturnObj | None: # todo complete function body
+    # Lookup in cache
+    cat = queryer.find_obj_in_cache(cursor, obj, partition.partition_id)
+
+    if cat is not None:
+        print(cat)
+        return
+    # Call upon chatgpt if cache miss
+
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_SECRET_KEY")
+    )
+
+    response = sort_into_partition(client, partition.categories, obj, reasoning="yes")
+
+    # Cache the answer
+    cache(response, partition)  # TODO implement a cache function that fits this bill
+
+    return None
+
+
+
+
+
 
 
