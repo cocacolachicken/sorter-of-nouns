@@ -9,13 +9,13 @@ def insert_partition(cursor, partition: list[str], name: str):
     return cursor.fetchone()
 
 
-def get_partition_by_id(cursor, id: int):
-    cursor.execute("SELECT *, ROWID from partition WHERE ROWID = ?", (id,))
+def get_partition_by_id(cursor, partition_id: int):
+    cursor.execute("SELECT *, ROWID from partition WHERE ROWID = ?", (partition_id,))
     return cursor.fetchone()
 
 
-def del_partition_by_id(cursor, id : int):
-    cursor.execute("DELETE FROM partition WHERE ROWID = ?", (id,))
+def del_partition_by_id(cursor, partition_id: int):
+    cursor.execute("DELETE FROM partition WHERE ROWID = ?", (partition_id,))
 
 
 if __name__ == "__main__":

@@ -46,3 +46,5 @@ if __name__ == "__main__":
 
     print(partition_to_string(["Fire", "Water", "Earth", "Wood", "Metal"]))
     print(["Fire", "Water", "Earth", "Wood", "Metal"])
+
+

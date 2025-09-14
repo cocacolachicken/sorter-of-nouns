@@ -2,7 +2,7 @@ import os
 import sqlite3
 
 from pydantic import BaseModel
-from decider import CategorizedNoun
+from openai import CategorizedNoun
 
 if __name__ == '__main__':
 
