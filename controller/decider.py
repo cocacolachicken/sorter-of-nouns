@@ -1,16 +1,10 @@
 import os
+import sqlite3
 
-from pydantic import BaseModel
-from partition import Partition
 from openai import OpenAI
-import queryer
 
-cursor = None;
-
-class CategorizedNoun(BaseModel):
-    category: str
-    original_object: str
-    reasoning: str
+from controller.queryer import Cacher
+from representations import Partition, CategorizedNoun
 
 
 def partition_to_string(partition):
@@ -27,7 +21,7 @@ def sort_into_partition(client, partition: list[str], obj, reasoning="no") -> Ca
 
     :param client: An openAI client
     :param partition: A list of strings denoting the categories wanted
-    :param obj: A string denoting the obejct specified
+    :param obj: A string denoting the object specified
     :param reasoning: include reasoning or no
     :return: output according to CategorizedNoun
     """
@@ -47,7 +41,6 @@ def sort_into_partition(client, partition: list[str], obj, reasoning="no") -> Ca
     return response.output_parsed
 
 
-
 class ReturnObj:
     m: str
 
@@ -55,13 +48,13 @@ class ReturnObj:
         return
 
 
-def decide_on_cat(obj: str, partition: Partition, cache) -> ReturnObj | None: # todo complete function body
+def decide_on_cat(obj: str, partition: Partition, cacher) -> CategorizedNoun | None:  # todo complete function body
     # Lookup in cache
-    cat = queryer.find_obj_in_cache(cursor, obj, partition.partition_id)
+    cat = cacher.fetch(obj=obj, partition=partition)  # TODO : insert something
 
     if cat is not None:
         print(cat)
-        return
+        return cat
     # Call upon chatgpt if cache miss
 
     client = OpenAI(
@@ -70,14 +63,26 @@ def decide_on_cat(obj: str, partition: Partition, cache) -> ReturnObj | None: # 
 
     response = sort_into_partition(client, partition.categories, obj, reasoning="yes")
 
+    print(response)
+
     # Cache the answer
-    cache(response, partition)  # TODO implement a cache function that fits this bill
+    cacher.insert(res=response, partition=partition)  # TODO implement a cache function that fits this bill
 
-    return None
-
-
+    return response
 
 
+if __name__ == "__main__":
+    con = sqlite3.connect("../test.sqlite")
 
+    part = Partition()
+    part.name = "hey"
+    part.partition_id = 1
+    part.categories = ["Pepper", "Salt", "Vinegar"]
 
+    cacher = Cacher()
 
+    a = decide_on_cat("Dogs", part, cacher)
+
+    print(a)
+
+    con.commit()
